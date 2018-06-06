@@ -159,19 +159,22 @@ with open('untappdLogin.txt', 'r') as f:
 
 if __name__ == '__main__':
 
+    #Record URLs in a dict first
     untappdURLDict = {}
 
     with requests.session() as s:
         untappdDict['session_key'] = getSessionKey(s)
+        #Log into Untappd. p records the response and can be inspected
         p = s.post('https://untappd.com/login/', data=untappdDict)
-        for name in dfBrewery['brewery']:
+        for name in dfBrewery['brewery']: #get URL for each brewery
             sleep(5.)
             untappdURL = getBreweryURLSession(name, s)
             print(name, untappdURL)
             untappdURLDict[name] = untappdURL
-
-    dfBrewery['untappdURL'] = dfBrewery['brewery'].apply(lambda x: untappdURLDict[x])
     
+    #Make a column for Untappd URLs
+    dfBrewery['untappdURL'] = dfBrewery['brewery'].apply(lambda x: untappdURLDict[x])
+    #Use empty string for breweries without an Untappd page
     dfBrewery.loc[dfBrewery['untappdURL'].isna(), 'untappdURL'] = ''
-
+    #Save to file
     dfBrewery.to_csv('brews/breweries_final.csv')
