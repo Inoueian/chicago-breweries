@@ -9,7 +9,11 @@ This returns GeocodeResults.csv.
 
 4. Run formatBrew.R with breweries.txt and GeocodeResults.csv as input to obtain breweries_final.csv (located in the R Shiny app folder called brews).
 
-5. The directory 'brews/' houses the material to run the Shiny app. app.R reads in breweries_final.csv and outputs the app. To run this in R, run shiny::runApp('pathToShinyApp/app.R'). Note that some additional columns are created in the app itself; at some point, the creation of these should be migrated over to formatBrew.R so that they're present in breweries_final.csv. 
+5. Run getUntappdURL.py. This adds a column in breweries_final.csv for Untappd URLs. You
+   need to save a valid Untappd 'username' and 'password' as a Python dictionary
+   in untappdLogin.txt file.
+
+6. The directory 'brews/' houses the material to run the Shiny app. app.R reads in breweries_final.csv and outputs the app. To run this in R, run shiny::runApp('pathToShinyApp/app.R'). Note that some additional columns are created in the app itself; at some point, the creation of these should be migrated over to formatBrew.R so that they're present in breweries_final.csv. 
 
 
 
