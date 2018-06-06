@@ -13,7 +13,10 @@ This returns GeocodeResults.csv.
    need to save a valid Untappd 'username' and 'password' as a Python dictionary
    in untappdLogin.txt file.
 
-6. The directory 'brews/' houses the material to run the Shiny app. app.R reads in breweries_final.csv and outputs the app. To run this in R, run shiny::runApp('pathToShinyApp/app.R'). Note that some additional columns are created in the app itself; at some point, the creation of these should be migrated over to formatBrew.R so that they're present in breweries_final.csv. 
+6. Run getRatings.py. This records brewery ratings in brewery_ratings.csv and
+   beer ratings in beers.csv, both in brews/ directory.
+
+7. The directory 'brews/' houses the material to run the Shiny app. app.R reads in breweries_final.csv and outputs the app. To run this in R, run shiny::runApp('pathToShinyApp/app.R'). Note that some additional columns are created in the app itself; at some point, the creation of these should be migrated over to formatBrew.R so that they're present in breweries_final.csv. 
 
 
 
