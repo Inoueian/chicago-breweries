@@ -137,7 +137,7 @@ if __name__ == "__main__":
     for url in dfBrewery['untappdURL']:
         if (type(url) == str) and (url not in ratingDict):
             #skip nan and URLs already seen
-            sleep(5.) #get around rate limits
+            sleep(1.) #get around rate limits
             try:
                 basic = getBasicRating(getBeerURL(url))
                 print(url, basic)
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         s.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36'})
         for url in failedURLs:
             if type(url) == str: #ignore nan
-                sleep(5.)
+                sleep(1.)
                 try:
                     basic = getBasicRatingSession(getBeerURL(url), s)
                     print(url, basic)
@@ -175,7 +175,7 @@ if __name__ == "__main__":
             try:
                 beerRatingDict[url] = getBeerRatings(url)
                 print(url, len(beerRatingDict[url]))
-                sleep(5.) #get around rate limits
+                sleep(1.) #get around rate limits
             except AttributeError:
                 print(url, 'Attribute Error')
             except TypeError:
@@ -189,7 +189,7 @@ if __name__ == "__main__":
                 try:
                     beerRatingDict[url] = getBeerRatingsSession(url, s)
                     print(url, len(beerRatingDict[url]))
-                    sleep(5.)
+                    sleep(1.)
                 except AttributeError:
                     print(url, 'Attribute Error')
                 except TypeError:
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     #append breweries one by one
     for url in beerRatingDict:
         if beerRatingDict[url]:
-            print(url, len(beerRatingDict[url]))
+            #print(url, len(beerRatingDict[url]))
             dfBrewery = pd.DataFrame(beerRatingDict[url])
             #include the brewery URL
             dfBrewery[6] = url

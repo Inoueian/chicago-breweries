@@ -169,7 +169,7 @@ if __name__ == '__main__':
         for name in dfBrewery['brewery']: #get URL for each brewery
             #sleep to get around access rate limits
             #I'm not sure how fast I can push this exactly
-            sleep(5.)
+            sleep(1.)
             untappdURL = getBreweryURLSession(name, s)
             print(name, untappdURL)
             untappdURLDict[name] = untappdURL
