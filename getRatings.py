@@ -9,10 +9,10 @@ from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 
+#reuse functions from getUntappdURL code
 from getUntappdURL import makeSoup, makeSoupSession
 
 #Import brewery databse
-
 dfBrewery = pd.read_csv('brews/breweries_final.csv')
 
 def getBeerURL(breweryURL):
@@ -26,23 +26,24 @@ def getBasicRating(url):
     """Get (average rating, number of ratings, number of beers),
     given the beer page URL"""
     soup = makeSoup(url)
-    #rating is under <p class="rating"> <span class="num">
+    #rating is w/in tags <p class="rating"> <span class="num">
     rawRating = soup.find('p', 'rating').find('span', 'num').string
     if not rawRating: #it can be N/A. I'll record these as nan
         rating = np.nan
     else:
         rating = float(rawRating.strip('()'))
-    #number of ratings is under <p class="raters">
+    #number of ratings is w/in <p class="raters">
     rawRaters = soup.find('p', 'raters').string
-    #number of beers is under <p class="
+    #number of beers is w/in <p class="
     rawBeers = soup.find('p', 'count').string
     
-    #Each of these is a string, w/ format
+    #These are strings, w/ format
     #'(#.##)', ' ###,### Ratings ', ' ### Beers '
     return (rating,
             int(rawRaters.split()[0].replace(',', '')),
             int(rawBeers.split()[0].replace(',', '')))
 
+#Define a version of this function within a session
 def getBasicRatingSession(url, session):
     """Get (average rating, number of ratings, number of beers),
     given the beer page URL"""
@@ -63,9 +64,8 @@ def getBasicRatingSession(url, session):
             int(rawRaters.split()[0].replace(',', '')),
             int(rawBeers.split()[0].replace(',', '')))
 
-#Write functions to extract 1. name, 2. style, 3. ABV, 4. IBU,
-#5. rating, 6. number of ratings, from the HTML.
-
+#Define a function to extract beer information
+#from the Untappd page listing top 25 beers for a brewery
 def getBeerTags(soup):
     """Get 'beer-details' tags and 'details' tags from /beer page,
     omitting the first item found for 'details', because this is
@@ -73,6 +73,8 @@ def getBeerTags(soup):
     return (soup.findAll('div', 'beer-details'),
             soup.findAll('div', 'details')[1:])
 
+#Write a function to extract 1. name, 2. style, 3. ABV, 4. IBU,
+#5. rating, 6. number of ratings, from the HTML.
 def getBeerRatingFromTags(tag1, tag2):
     """Given 'beer-details' tag and 'details' tag for a beer,
     get (name, style, ABV, IBU, rating, number of ratings)."""
@@ -82,7 +84,7 @@ def getBeerRatingFromTags(tag1, tag2):
     rawIBU    = tag2.find('p', 'ibu').text
     rawRating = tag2.find('p', 'rating').text
     rawRaters = tag2.find('p', 'raters').text
-    #the last 4 needs parsing
+    #the last 4 need parsing
     try: #read off # from ' #% ABV '
         ABV = float(rawABV.strip().split('%')[0])
     except ValueError: # ' N/A ABV '
@@ -102,11 +104,13 @@ def getBeerRatingFromTags(tag1, tag2):
     return (name, style, ABV, IBU, rating, raters)
 
 def getBeerRatings(url):
-    """Get the list of up to 25 most popular beers for a brewery,
-    where each entry is (name, style, ABV, IBU, rating, number of ratings)"""
+    """Given an Untappd brewery URL,
+    returns the list of up to 25 most popular beers for a brewery,
+    where each element is a tuple
+    (name, style, ABV, IBU, rating, number of ratings)"""
     if not url: #no URL
         return [] #no beers
-    #make soup from the beer page
+    #make soup from the beer page for a brewery
     soup = makeSoup(url + '/beer')
     #get the lists of tags for beers and their ratings
     list1, list2 = getBeerTags(soup)
@@ -125,28 +129,21 @@ def getBeerRatingsSession(url, session):
     return [getBeerRatingFromTags(tag1, tag2)
             for tag1, tag2 in zip(list1, list2)]
 
-
-
 if __name__ == "__main__":
     
+    #first store brewery ratings in a dict
     ratingDict = {}
 
     for url in dfBrewery['untappdURL']:
         if (type(url) == str) and (url not in ratingDict):
             #skip nan and URLs already seen
-            sleep(5.)
+            sleep(5.) #get around rate limits
             try:
                 basic = getBasicRating(getBeerURL(url))
                 print(url, basic)
                 ratingDict[url] = basic
             except AttributeError:
                 print(url, 'AttributeError')
-
-    for url in ratingDict.keys():
-        if type(ratingDict[url]) != tuple:
-            basic = getBasicRating(getBeerURL(url))
-            print(url, basic)
-            ratingDict[url] = basic
 
     #URLs that didn't work
     failedURLs = set(dfBrewery['untappdURL']) - set(ratingDict.keys())
@@ -164,13 +161,13 @@ if __name__ == "__main__":
                 except AttributeError:
                     print(url, 'AttributeError')
 
+    #set up DataFrame
     dfRating = pd.DataFrame.from_dict(ratingDict, orient='index')
     dfRating.columns = ['rating', 'raters', 'beers']
-
+    #save to file
     dfRating.to_csv('brews/brewery_ratings.csv')
 
     #Get beer ratings
-
     beerRatingDict = {}
 
     for url in dfBrewery['untappdURL']:
@@ -178,7 +175,7 @@ if __name__ == "__main__":
             try:
                 beerRatingDict[url] = getBeerRatings(url)
                 print(url, len(beerRatingDict[url]))
-                sleep(5.)
+                sleep(5.) #get around rate limits
             except AttributeError:
                 print(url, 'Attribute Error')
             except TypeError:
@@ -201,18 +198,19 @@ if __name__ == "__main__":
     #Make a DataFrame of beers.
     dfBeer = pd.DataFrame()
 
+    #append breweries one by one
     for url in beerRatingDict:
         if beerRatingDict[url]:
             print(url, len(beerRatingDict[url]))
             dfBrewery = pd.DataFrame(beerRatingDict[url])
-            #associate the brewery URL
+            #include the brewery URL
             dfBrewery[6] = url
-            #popularity rank within brewery
+            #include popularity rank within brewery
             dfBrewery[7] = range(1, len(dfBrewery) + 1)
             dfBeer = dfBeer.append(dfBrewery)
 
+    #set up DataFrame
     dfBeer.columns = ['name', 'style', 'ABV', 'IBU', 'rating', 'raters', 'brewery_URL', 'rank']
-    
     dfBeer = dfBeer.set_index('name')
-
+    #save to file
     dfBeer.to_csv('brews/beers.csv')

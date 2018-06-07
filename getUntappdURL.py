@@ -40,7 +40,7 @@ def logError(e):
     print(e)
 
 def makeSoup(url):
-    """Use simple_get function to make soup from url"""
+    """Use simpleGet function to make soup from url"""
     try:
         return BeautifulSoup(simpleGet(url), 'html.parser')
     except TypeError as e:
@@ -73,7 +73,7 @@ def searchURL(name):
     return 'https://untappd.com/search?q=' + nameParsed + '&type=brewery'
 
 def getBreweryURL(name):
-    """Returns the Untappd brewery page URL from name"""
+    """Returns the Untappd brewery page URL given a brewery name"""
     if name == '': #recursion did not work
         return None
     elif name in nameDict: #convert exceptional cases
@@ -128,7 +128,7 @@ def makeSoupSession(url, session):
         return None
 
 def getBreweryURLSession(name, session):
-    """Returns the Untappd brewery page URL from name"""
+    """Returns the Untappd brewery page URL given a brewery name"""
     if name == '': #recursion did not work
         return None
     elif name in nameDict: #convert exceptional cases
@@ -167,6 +167,8 @@ if __name__ == '__main__':
         #Log into Untappd. p records the response and can be inspected
         p = s.post('https://untappd.com/login/', data=untappdDict)
         for name in dfBrewery['brewery']: #get URL for each brewery
+            #sleep to get around access rate limits
+            #I'm not sure how fast I can push this exactly
             sleep(5.)
             untappdURL = getBreweryURLSession(name, s)
             print(name, untappdURL)
